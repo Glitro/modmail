@@ -1,3 +1,5 @@
+// event - uncaughtException
+// emitter - process
 module.exports = {
   name: "uncaughtException",
   emitter: "process",
