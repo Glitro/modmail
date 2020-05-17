@@ -1,3 +1,5 @@
+// event - warning
+// emitter - process
 module.exports = {
   name: "warning",
   emitter: "process",
