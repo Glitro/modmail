@@ -1,38 +1,17 @@
-// declaring all the needed modules and files
-const express = require("express");
-const app = express();
-const config = require("./config.js");
-const mongoose = require("mongoose");
-const fs = require("fs");
-const Discord = require("discord.js");
-const path = require("path");
+// require external or built-in modules
+const req = require("require-all");
 
-app.use(express.static("public")); // these lines are the web server.
-app.get("/", function(request, response) { // they are used for 24/7 hosting
-  response.sendStatus(200); // if you do not use a VPS
-});
-app.listen(process.env.PORT); // or some other server already
+// require local files
+const { ModMailClient } = require("./classes.js");
 
-// client defintions to be access from any other file in this repo
-const client = new Discord.Client();
-client.commands = new Discord.Collection();
-client.aliases = new Discord.Collection();
-global.client = client;
+// create local variables
+const client = new ModMailClient();
 
-// the event handler - for cleaner code. event files found in the event folder
-fs.readdir("./events", async (err, files) => {
-  if (err) return console.error(err);
-  const eventFiles = files.filter(file => file.endsWith(".js"));
+// listen for events
+let files = req(`${__dirname}/events`);
+for (let eventFile of Object.values(files)) {
+  eventFile = new eventFile(client);
+  eventFile.emitter.on(eventFile.name, (...args) => eventFile.run(...args));
+}
 
-  for (const file of eventFiles) {
-    const event = require(`./events/${file}`);
-
-    if (event.emitter == "discord")
-      client.once(event.name, (...args) => event.run(...args));
-    else if (event.emitter == "process")
-      process.once(event.name, (...args) => event.run(...args));
-  }
-});
-
-// login to the discord client
-client.login(config.token)
+client.login(client.config.token);
