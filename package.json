@@ -1,0 +1,28 @@
+{
+  "name": "modmail",
+  "version": "1.0.0",
+  "description": "An open-source modmail bot for Discord created in javascript - discord.js module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "discord.js": "^12.4.0",
+    "fs": "^0.0.2",
+    "hastebin-gen": "^2.0.5",
+    "mongoose": "^5.10.14",
+    "require-all": "^3.0.0"
+  },
+  "engines": {
+    "node": "12.x"
+  },
+  "repository": {
+    "url": "https://github.com/DeathHound6/modmail",
+    "bugs": "https://github.com/DeathHound6/modmail/issues"
+  },
+  "license": "MIT",
+  "keywords": [
+    "modmail",
+    "discordjs"
+  ]
+}

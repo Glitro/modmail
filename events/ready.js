@@ -1,44 +1,54 @@
-// declaring files/modules/client
-const client = global.client;
-const fs = require("fs");
 const mongoose = require("mongoose");
-const config = require("../config.js");
+const req = require("require-all");
+const { Event } = require("../classes.js");
 
-// event - ready
-// emitter - Discord Client
-module.exports = {
-  name: "ready",
-  emitter: "discord",
-  run: async function() {
-  // set the bot's status
-    client.user.setActivity(`for DMs`, {
-      type: "WATCHING"
-    });
-
-    // command handler/loader - command files in the `commands` folder
-    fs.readdir("./commands", async (err, files) => {
-      if(err) return client.emit("error", err);
-      const commandFiles = files.filter(file => file.endsWith(".js"));
-
-      for (const file of commandFiles) {
-        const command = require(`../commands/${file}`);
-        if (!command.name || command.name.length < 1) continue; // if a name is not specified, do not load it
-        client.commands.set(command.name, command); // load all commands to be used by the message event/commands
-
-        if (!command.aliases || command.aliases.length < 1) continue; // if there are no aliases, do not load any
-        command.aliases.forEach(alias => {
-          client.aliases.set(alias, command.name); // load all aliases to be used by the message event/commands
-        });
+module.exports = class Ready extends Event {
+  constructor(client) {
+    super(client, { name: "ready", emitter: client });
+  }
+  async run() {
+    this.client.user.setPresence({
+      activity: {
+        name: "for DMs",
+        type: "WATCHING"
       }
     });
+    console.log(`Bot Online: ${this.client.user.tag}`);
 
-    try {
-      mongoose.connect(
-        config.mongo.connectionString,
-        config.mongo.options
-      ); // connect to the mongoDB cluster
-    } catch (err) {
-      return console.error(err);
+    let cmdFiles = req(`${process.cwd()}/commands/`);
+    for (let command of Object.values(cmdFiles)) {
+      command = new command(this.client);
+      if (!command.name || command.name.length < 1) continue;
+      this.client.commands.set(command.name, command);
+      console.log(`Loaded command >${command.name}<`);
     }
+
+    mongoose.connect(
+      this.client.config.mongo.connectionString,
+      this.client.config.mongo.options
+    );
+    let log = await this.client.models.logs.findOne({});
+    if (!log) return;
+    let perm = await this.client.models.perms.findOne({});
+    if (!perm) return;
+
+    const members = await (await this.client.channels.fetch(
+      log.logs
+    )).guild.members.fetch();
+    members.forEach(member => {
+      if (!perm.users.includes(member.user.id)) perm.users.push(member.user.id);
+      if (
+        !perm.mods.includes(member.user.id) &&
+        member.roles.cache.has(log.supportRole)
+      )
+        perm.mods.push(member.user.id);
+      if (
+        !perm.owners.includes(member.user.id) &&
+        member.permissions.has("MANAGE_GUILD")
+      )
+        perm.owners.push(member.user.id);
+    });
+    perm.updated = true;
+    await perm.save();
   }
 };
