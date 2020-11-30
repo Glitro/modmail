@@ -1,7 +1,0 @@
-=> commands:
-  -> remind.js
-  -> contact.js
-  -> config.js (settings/staff)
-  
-=> embed responses
-=> catch fetching errors
