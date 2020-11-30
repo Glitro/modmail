@@ -5,7 +5,8 @@ module.exports = class Remind extends Command {
     super(client, {
       name: "remind",
       description:
-        "Whether you should be mentioned upon a new thread message or not"
+        "Whether you should be mentioned upon a new thread message or not",
+      perm: "mods"
     });
   }
   async run(message, args) {

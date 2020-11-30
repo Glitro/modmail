@@ -5,40 +5,65 @@ module.exports = class Reply extends Command {
     super(client, {
       name: "reply",
       description: "Reply to a ModMail thread",
-      aliases: ["r"]
+      aliases: ["r"],
+      perm: "mods"
     });
   }
   async run(message, args) {
     let thread = await message.client.models.threads.findOne({
-      channel: message.channel.id
+      channel: message.channel.id,
+      open: true
     });
     let log = await message.client.models.logs.findOne({});
     if (thread) {
+      let anon = false;
+      if (message.content.toLowerCase().includes("-a")) anon = true;
+        args.forEach(e => {
+          if (e.toLowerCase() == "-a")
+            args.splice(args.findIndex(f => f == e), 1);
+        });
       if (thread.mod == message.author.id) {
-        (await message.client.users.fetch(thread.recipient)).send(
-          `__MODERATOR__ **${message.author.username}** => ${
-            args[0] ? args.join(" ") : ""
-          }`,
-          message.attachments.array()
-        );
-        thread.messages.push(message);
-        message.channel.send("Message Sent");
-      } else if (thread.mod == "") {
-        thread.mod = message.author.id;
+        if (!args[0] && !message.attachments.first())
+          return message.channel.send("Please send text or an image");
+
+        // try to send the message to the recipient
         await (await message.client.users.fetch(thread.recipient))
           .send(
-            `__SYSTEM__ => Your thread is now being handled by **${message.author.username}**`
+            `__MODERATOR__ **${
+              !anon ? message.author.username : "Anonymous"
+            }** => ${args[0] ? args.join(" ") : ""}`,
+            message.attachments.array()
           )
           .catch(() => {
             return message.channel.send("Message Failed to send");
           });
-        (await message.client.users.fetch(thread.recipient)).send(
-          `__MODERATOR__ **${message.author.username}** => ${
-            args[0] ? args.join(" ") : ""
-          }`,
+
+        thread.messages.push(message);
+        message.channel.send(
+          `__MODERATOR__ **${
+            !anon ? message.author.username : "Anonymous"
+          }** => ${args.join(" ")}`,
           message.attachments.array()
         );
-        
+      } else if (thread.mod == "") {
+        thread.mod = message.author.id;
+        let msg = `__SYSTEM__ => Your thread is now being handled by **${
+          !anon ? message.author.username : "Anonymous"
+        }**`;
+        await (await message.client.users.fetch(thread.recipient))
+          .send(msg)
+          .catch(() => {
+            return message.channel.send("Message Failed to send");
+          });
+        await message.channel.send(msg);
+        msg = `__MODERATOR__ **${
+          !anon ? message.author.username : "Anonymous"
+        }** => ${args.join(" ")}`;
+        (
+          await message.client.users.fetch(thread.recipient)
+        ).send(msg, message.attachments.array());
+        await message.channel.send(msg);
+
         message.channel.createOverwrite(message.author, {
           SEND_MESSAGES: true,
           READ_MESSAGE_HISTORY: true,
@@ -49,14 +74,13 @@ module.exports = class Reply extends Command {
           READ_MESSAGE_HISTORY: true,
           SEND_MESSAGE: false
         });
-        
+
         thread.messages.push({
-          content: message.content,
+          content: args.join(" "),
           attachments: message.attachments.array(),
           author: message.author.id
         });
-        message.channel.send("Message Sent");
-      } 
+      }
       thread.updated = true;
       await thread.save();
     } else {
