@@ -2,7 +2,7 @@ const { Command } = require("../classes.js");
 
 module.exports = class Eval extends Command {
   constructor(client) {
-    super(client, { name: "eval", description: "Run JavaScript code" });
+    super(client, { name: "eval", description: "Run JavaScript code", perm: "owners" });
   }
   async run(message, args) {
     let perm = await message.client.models.perms.findOne({});

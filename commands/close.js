@@ -7,7 +7,8 @@ module.exports = class Close extends Command {
     super(client, {
       name: "close",
       description: "Close a ModMail thread",
-      aliases: ["delete", "del"]
+      aliases: ["delete", "del"],
+      perm: "mods"
     });
   }
   async run(message, args) {
@@ -51,8 +52,8 @@ module.exports = class Close extends Command {
         .setTitle(
           `Logs for ${(await message.client.users.fetch(thread.recipient)).tag}`
         )
-        .setColor(message.client.data.colours.blue)
-        .setDescription(`The [logs](haste)`)
+        .setColor(message.client.data.colours.purple)
+        .setDescription(`The [logs](${haste})`)
         .addField(
           "Recipient",
           `${(await message.client.users.fetch(thread.recipient)).tag} (${

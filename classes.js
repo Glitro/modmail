@@ -25,7 +25,7 @@ class Event {
 }
 
 class Command {
-  constructor(client, { name = "", description = "", aliases = [] }) {
+  constructor(client, { name = "", description = "", aliases = [], perm = "users" }) {
     this.client = client;
 
     this.name = name;
@@ -33,6 +33,8 @@ class Command {
     this.description = description;
 
     this.aliases = aliases;
+    
+    this.perm = perm;
   }
 }
 

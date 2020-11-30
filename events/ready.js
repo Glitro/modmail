@@ -32,22 +32,24 @@ module.exports = class Ready extends Event {
     let perm = await this.client.models.perms.findOne({});
     if (!perm) return;
 
-    const members = await (await this.client.channels.fetch(
+    let members = await (await this.client.channels.fetch(
       log.logs
     )).guild.members.fetch();
-    members.forEach(member => {
-      if (!perm.users.includes(member.user.id)) perm.users.push(member.user.id);
+    members = members.array();
+    for (let i = 0; i < members.length; i++) {
+      if (members[i].user.bot) continue;
+      if (!perm.users.includes(members[i].user.id)) perm.users.push(members[i].user.id);
       if (
-        !perm.mods.includes(member.user.id) &&
-        member.roles.cache.has(log.supportRole)
+        !perm.mods.includes(members[i].user.id) &&
+        members[i].roles.cache.has(log.supportRole)
       )
-        perm.mods.push(member.user.id);
+        perm.mods.push(members[i].user.id);
       if (
-        !perm.owners.includes(member.user.id) &&
-        member.permissions.has("MANAGE_GUILD")
+        !perm.owners.includes(members[i].user.id) &&
+        members[i].permissions.has("MANAGE_GUILD")
       )
-        perm.owners.push(member.user.id);
-    });
+        perm.owners.push(members[i].user.id);
+    }
     perm.updated = true;
     await perm.save();
   }

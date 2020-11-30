@@ -5,7 +5,8 @@ module.exports = class Setup extends Command {
     super(client, {
       name: "setup",
       description: "Setup the server",
-      aliases: ["set-up"]
+      aliases: ["set-up"],
+      perms: "owners"
     });
   }
   async run(message, args) {
