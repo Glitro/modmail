@@ -1,5 +1,5 @@
 module.exports = {
-  prefix: "m!", // change this value for setup
+  prefix: "%", // change this value for setup
   token: process.env.TOKEN, // change this value for setup - if you use environment variables, change the value there rather than here
 
   mongo: {
